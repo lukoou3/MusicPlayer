@@ -2,9 +2,11 @@ from widgets import ScrollArea
 from PyQt5.QtWidgets import QApplication,QVBoxLayout,QGridLayout,QFrame,QTabWidget,QLabel,QPushButton,QLineEdit
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt,pyqtSignal
-import requests
+from service import addToLoop,RecommendMusicNetEaseService,makeMd5
 import asyncio
+import os
 
+@addToLoop
 async def test():
     await asyncio.sleep(0.1)
     print('timeout expired')
@@ -54,14 +56,9 @@ class RecommendMusic(ScrollArea):
         self.addRecommendMusicTabs()
 
     def addRecommendMusicTabs(self):
-        tab = RecommendMusicNetEase()
-        tab.addImgs()
-        loop = asyncio.get_event_loop()
-        loop.create_task(test())
-        loop.create_task(test())
-        loop.create_task(test())
-        loop.create_task(test())
-        #tab.getRecommendPlayList()
+        tab = RecommendMusicNetEase(self)
+        #tab.addImgs()
+        tab.getRecommendPlayList()
         self.addTab(tab,"网易云")
 
     def addTab(self, widget, name=''):
@@ -69,42 +66,70 @@ class RecommendMusic(ScrollArea):
 
 
 class RecommendMusicNetEase(RecommendMusicTabBase):
+    def __init__(self, parent=None):
+        """推荐歌单tabbase"""
+        super().__init__(parent)
+        self.seivice = RecommendMusicNetEaseService()
 
-    def getRecommendPlayList(self, cat='全部歌单', types='all', offset=0, index=1):
-        url = 'http://music.163.com/api/playlist/list?cat=%s&type=%s&order=%s&offset=%d&total=true&limit=30&index=%d' \
-              % (cat, types, types, offset, index)
-        response = requests.get(url,headers = {
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Connection': 'keep-alive',
-        'Pragma': 'no-cache',
-        'Cache-Control': 'no-cache',
-        'Accept-Encoding': 'gzip,deflate,sdch',
-        'Accept-Language': 'zh-CN,zh;q=0.8',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36'
-    })
-        print(response.text)
+    @addToLoop
+    async def getRecommendPlayList(self, cat='全部歌单', types='all', offset=0, index=1):
+        playlists = await self.seivice.getRecommendPlayList(cat,types,offset,index)
+
+        if playlists:
+            if not os.path.exists('cache/imgs'):
+                os.makedirs('cache/imgs')
+            cacheSet = set(os.listdir('cache/imgs'))
+
+            length = 0
+            do_list = list()
+            for data in playlists:
+                picName = makeMd5(data["coverImgUrl"])
+                data["imgUrl"] = 'cache/imgs/{}'.format(picName)
+                if picName in cacheSet:
+                    row = int(length/4)
+                    column = length % 4
+                    length += 1
+                    imgLabel = OneSingSeriesLabel(data["id"],data["imgUrl"],data["name"])
+                    self.mainLayout.addWidget(imgLabel, row, column, Qt.AlignCenter)
+                else:
+                    do_list.append(self.seivice.loadRecommendImg(data["coverImgUrl"],picName,data))
+
+            if do_list:
+                to_do_iter = asyncio.as_completed(do_list)
+                for future in to_do_iter:
+                    data = await future
+                    if data:
+                        row = int(length / 4)
+                        column = length % 4
+                        length += 1
+                        imgLabel = OneSingSeriesLabel(data["id"],data["imgUrl"], data["name"])
+                        self.mainLayout.addWidget(imgLabel, row, column, Qt.AlignCenter)
+
+
+
 
     def addImgs(self):
         for i in range(4):
-            for j in range(4):
+            for j in range(2):
                 imgLabel = OneSingSeriesLabel()
                 self.mainLayout.addWidget(imgLabel,i,j,Qt.AlignCenter)
 
 
 class OneSingSeriesLabel(QFrame):
     clicked = pyqtSignal()
-    def __init__(self):
+    def __init__(self,id,imgUrl,name):
         super().__init__()
+        self.id = id
 
         self.setMinimumSize(160, 210)
 
         imgLabel = QLabel()
-        imgLabel.setPixmap(QPixmap("../icons/0a7e0e9c945d8049f4a6a2c461147917"))
-        imgLabel.setScaledContents(True)
+        imgLabel.setObjectName("imgLabel")
+        imgLabel.setStyleSheet("#imgLabel{border-image: url(%s)}" % imgUrl)
         imgLabel.setMinimumSize(160, 180)
         imgLabel.setMaximumSize(160, 180)
 
-        nameLabel = QLabel("福欧艾斯")
+        nameLabel = QLabel(name)
         nameLabel.setMaximumWidth(160)
         nameLabel.setWordWrap(True)
 

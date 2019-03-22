@@ -17,7 +17,7 @@ class Header(QFrame):
         self.logoLabel = QLabel()
         self.logoLabel.setMaximumSize(32,32)
         self.logoLabel.setText("")
-        self.logoLabel.setPixmap(QPixmap("../icons/timg.jpg"))
+        self.logoLabel.setPixmap(QPixmap("icons/timg.jpg"))
         self.logoLabel.setScaledContents(True)
         self.logoLabel.setObjectName("logoLabel")
         self.mainLayout.addWidget(self.logoLabel)

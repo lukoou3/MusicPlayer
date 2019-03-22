@@ -24,9 +24,9 @@ class Navigation(ScrollArea):
 
         self.recommendList = QListWidget()
         self.recommendList.setObjectName("recommendList")
-        self.recommendList.addItem(QListWidgetItem(QIcon('../icons/music.jpg'), " 发现音乐"))
-        self.recommendList.addItem(QListWidgetItem(QIcon('../icons/music.jpg'), " 私人FM"))
-        self.recommendList.addItem(QListWidgetItem(QIcon('../icons/music.jpg'), " MV"))
+        self.recommendList.addItem(QListWidgetItem(QIcon('icons/music.jpg'), " 发现音乐"))
+        self.recommendList.addItem(QListWidgetItem(QIcon('icons/music.jpg'), " 私人FM"))
+        self.recommendList.addItem(QListWidgetItem(QIcon('icons/music.jpg'), " MV"))
         self.mainLayout.addWidget(self.recommendList)
 
         self.mainLayout.addSpacing(5)
@@ -37,8 +37,8 @@ class Navigation(ScrollArea):
 
         self.myMusicList = QListWidget()
         self.myMusicList.setObjectName("myMusicList")
-        self.myMusicList.addItem(QListWidgetItem(QIcon('../icons/music.jpg'), " 本地音乐"))
-        self.myMusicList.addItem(QListWidgetItem(QIcon('../icons/music.jpg'), " 我的下载"))
+        self.myMusicList.addItem(QListWidgetItem(QIcon('icons/music.jpg'), " 本地音乐"))
+        self.myMusicList.addItem(QListWidgetItem(QIcon('icons/music.jpg'), " 我的下载"))
         self.mainLayout.addWidget(self.myMusicList)
 
 if __name__ == "__main__":
