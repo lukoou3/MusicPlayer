@@ -1,6 +1,5 @@
 from widgets import ScrollArea
-from PyQt5.QtWidgets import QApplication,QVBoxLayout,QGridLayout,QFrame,QTabWidget,QLabel,QPushButton,QLineEdit
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QVBoxLayout,QGridLayout,QFrame,QTabWidget,QLabel
 from PyQt5.QtCore import Qt,pyqtSignal
 from service import addToLoop,RecommendMusicNetEaseService,makeMd5
 import asyncio
@@ -28,12 +27,6 @@ class RecommendMusicTabBase(ScrollArea):
         self.mainLayout.setHorizontalSpacing(10)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
 
-    def addImgs(self):
-        for i in range(4):
-            for j in range(4):
-                imgLabel = OneSingSeriesLabel()
-                self.mainLayout.addWidget(imgLabel,i,j,Qt.AlignCenter)
-
 class RecommendMusic(ScrollArea):
     def __init__(self, parent=None):
         """主内容区，包括推荐歌单等。"""
@@ -57,7 +50,6 @@ class RecommendMusic(ScrollArea):
 
     def addRecommendMusicTabs(self):
         tab = RecommendMusicNetEase(self)
-        #tab.addImgs()
         tab.getRecommendPlayList()
         self.addTab(tab,"网易云")
 
@@ -106,28 +98,19 @@ class RecommendMusicNetEase(RecommendMusicTabBase):
                         self.mainLayout.addWidget(imgLabel, row, column, Qt.AlignCenter)
 
 
-
-
-    def addImgs(self):
-        for i in range(4):
-            for j in range(2):
-                imgLabel = OneSingSeriesLabel()
-                self.mainLayout.addWidget(imgLabel,i,j,Qt.AlignCenter)
-
-
 class OneSingSeriesLabel(QFrame):
     clicked = pyqtSignal()
     def __init__(self,id,imgUrl,name):
         super().__init__()
         self.id = id
 
-        self.setMinimumSize(160, 210)
+        self.setMinimumSize(160, 200)
 
         imgLabel = QLabel()
         imgLabel.setObjectName("imgLabel")
         imgLabel.setStyleSheet("#imgLabel{border-image: url(%s)}" % imgUrl)
-        imgLabel.setMinimumSize(160, 180)
-        imgLabel.setMaximumSize(160, 180)
+        imgLabel.setMinimumSize(160, 160)
+        imgLabel.setMaximumSize(160, 160)
 
         nameLabel = QLabel(name)
         nameLabel.setMaximumWidth(160)
