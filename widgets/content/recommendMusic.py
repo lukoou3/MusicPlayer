@@ -2,7 +2,7 @@ from widgets import ScrollArea
 from PyQt5.QtWidgets import QVBoxLayout,QGridLayout,QFrame,QTabWidget,QLabel
 from PyQt5.QtCore import Qt,pyqtSignal
 from PyQt5.QtGui import QCursor
-from service import addToLoop,RecommendMusicNetEaseService,makeMd5
+from service import addToLoop,RecommendMusicNetEaseService,RecommendMusicQQService,makeMd5
 import asyncio
 import os
 
@@ -51,8 +51,9 @@ class RecommendMusic(ScrollArea):
 
     def addRecommendMusicTabs(self):
         tab = RecommendMusicNetEase(self.parent)
-        tab.getRecommendPlayList()
         self.addTab(tab,"网易云")
+        tab = RecommendMusicQQ(self.parent)
+        self.addTab(tab, "QQ")
 
     def addTab(self, widget, name=''):
         self.tabWidget.addTab(widget, name)
@@ -63,6 +64,7 @@ class RecommendMusicNetEase(RecommendMusicTabBase):
         """推荐歌单tabbase"""
         super().__init__(parent)
         self.seivice = RecommendMusicNetEaseService()
+        self.getRecommendPlayList()
 
     @addToLoop
     async def getRecommendPlayList(self, cat='全部歌单', types='all', offset=0, index=1):
@@ -97,12 +99,60 @@ class RecommendMusicNetEase(RecommendMusicTabBase):
                         column = length % 4
                         length += 1
                         imgLabel = OneSingSeriesLabel(data["imgUrl"], data["name"],data)
+                        imgLabel.clicked.connect(self.openMusicDetail)
                         self.mainLayout.addWidget(imgLabel, row, column, Qt.AlignCenter)
 
     def openMusicDetail(self,data):
         musicDetailNetEase = self.parent.musicDetailNetEase
         musicDetailNetEase.updateInfo(data)
         self.parent.changeContentWidget(musicDetailNetEase)
+
+class RecommendMusicQQ(RecommendMusicTabBase):
+    def __init__(self, parent=None):
+        """推荐歌单tabbase"""
+        super().__init__(parent)
+        self.seivice = RecommendMusicQQService()
+        self.getRecommendPlayList()
+
+    @addToLoop
+    async def getRecommendPlayList(self,sin=0,ein=29):
+        playlists = await self.seivice.getRecommendPlayList(sin,ein)
+
+        if playlists:
+            if not os.path.exists('cache/imgs'):
+                os.makedirs('cache/imgs')
+            cacheSet = set(os.listdir('cache/imgs'))
+
+            length = 0
+            do_list = list()
+            for data in playlists:
+                data["name"] = data["dissname"]
+                picName = makeMd5(data["imgurl"])
+                data["imgUrl"] = 'cache/imgs/{}'.format(picName)
+                if picName in cacheSet:
+                    row = int(length/4)
+                    column = length % 4
+                    length += 1
+                    imgLabel = OneSingSeriesLabel(data["imgUrl"],data["name"],data)
+                    imgLabel.clicked.connect(self.openMusicDetail)
+                    self.mainLayout.addWidget(imgLabel, row, column, Qt.AlignCenter)
+                else:
+                    do_list.append(self.seivice.loadRecommendImg(data["imgurl"],picName,data))
+
+            if do_list:
+                to_do_iter = asyncio.as_completed(do_list)
+                for future in to_do_iter:
+                    data = await future
+                    if data:
+                        row = int(length / 4)
+                        column = length % 4
+                        length += 1
+                        imgLabel = OneSingSeriesLabel(data["imgUrl"], data["name"],data)
+                        imgLabel.clicked.connect(self.openMusicDetail)
+                        self.mainLayout.addWidget(imgLabel, row, column, Qt.AlignCenter)
+
+    def openMusicDetail(self, data):
+        pass
 
 class OneSingSeriesLabel(QFrame):
     clicked = pyqtSignal(dict)

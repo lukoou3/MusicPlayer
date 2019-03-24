@@ -43,4 +43,28 @@ class RecommendMusicNetEaseService(RecommendMusicService):
                 return None
 
 
+class RecommendMusicQQService(RecommendMusicService):
+    def __init__(self):
+        super().__init__()
+        self.session = session["session"]
+        self.headers = headers.copy()
+        self.headers.update({"Host": "c.y.qq.com","Referer": "https://y.qq.com/portal/playlist.html"})
 
+    async def getRecommendPlayList(self,sin=0,ein=29):
+        """
+        ein控制返回的歌单。
+        29, 59, 89....
+        """
+        url = 'https://c.y.qq.com/splcloud/fcgi-bin/' +\
+            'fcg_get_diss_by_tag.fcg?rnd=0.5136307078685405&g_tk=5381&' +\
+            'jsonpCallback=getPlaylist&loginUin=0&hostUin=0&format=jsonp&inCharset=utf8' +\
+            '&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0&categoryId=10000000&' +\
+            'sortId=5&sin={0}&ein={1}'.format(sin,ein)
+        async with self.session.get(url,headers=self.headers,timeout=3) as response:
+            if response.status == 200:
+                text =  await response.text()
+                #print(text[len('getPlaylist('):-1])
+                #返回的字符串需要处理才能转json
+                return json.loads(text[len('getPlaylist('):-1])["data"]["list"]
+            else:
+                return None
