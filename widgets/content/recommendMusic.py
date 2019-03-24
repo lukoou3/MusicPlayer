@@ -1,6 +1,7 @@
 from widgets import ScrollArea
 from PyQt5.QtWidgets import QVBoxLayout,QGridLayout,QFrame,QTabWidget,QLabel
 from PyQt5.QtCore import Qt,pyqtSignal
+from PyQt5.QtGui import QCursor
 from service import addToLoop,RecommendMusicNetEaseService,makeMd5
 import asyncio
 import os
@@ -49,7 +50,7 @@ class RecommendMusic(ScrollArea):
         self.addRecommendMusicTabs()
 
     def addRecommendMusicTabs(self):
-        tab = RecommendMusicNetEase(self)
+        tab = RecommendMusicNetEase(self.parent)
         tab.getRecommendPlayList()
         self.addTab(tab,"网易云")
 
@@ -81,7 +82,8 @@ class RecommendMusicNetEase(RecommendMusicTabBase):
                     row = int(length/4)
                     column = length % 4
                     length += 1
-                    imgLabel = OneSingSeriesLabel(data["id"],data["imgUrl"],data["name"])
+                    imgLabel = OneSingSeriesLabel(data["imgUrl"],data["name"],data)
+                    imgLabel.clicked.connect(self.openMusicDetail)
                     self.mainLayout.addWidget(imgLabel, row, column, Qt.AlignCenter)
                 else:
                     do_list.append(self.seivice.loadRecommendImg(data["coverImgUrl"],picName,data))
@@ -94,17 +96,21 @@ class RecommendMusicNetEase(RecommendMusicTabBase):
                         row = int(length / 4)
                         column = length % 4
                         length += 1
-                        imgLabel = OneSingSeriesLabel(data["id"],data["imgUrl"], data["name"])
+                        imgLabel = OneSingSeriesLabel(data["imgUrl"], data["name"],data)
                         self.mainLayout.addWidget(imgLabel, row, column, Qt.AlignCenter)
 
+    def openMusicDetail(self,data):
+        musicDetailNetEase = self.parent.musicDetailNetEase
+        musicDetailNetEase.updateInfo(data)
+        self.parent.changeContentWidget(musicDetailNetEase)
 
 class OneSingSeriesLabel(QFrame):
-    clicked = pyqtSignal()
-    def __init__(self,id,imgUrl,name):
+    clicked = pyqtSignal(dict)
+    def __init__(self,imgUrl,name,data):
         super().__init__()
-        self.id = id
+        self.data = data
 
-        self.setMinimumSize(160, 200)
+        self.setMinimumSize(160, 210)
 
         imgLabel = QLabel()
         imgLabel.setObjectName("imgLabel")
@@ -118,7 +124,21 @@ class OneSingSeriesLabel(QFrame):
 
         self.mainLayout = QVBoxLayout(self)
         #self.mainLayout.setAlignment(Qt.AlignCenter)#设了无用
-        self.mainLayout.addWidget(imgLabel,alignment=Qt.AlignCenter)
-        self.mainLayout.addWidget(nameLabel,alignment=Qt.AlignLeft)
+        #self.mainLayout.addWidget(imgLabel, alignment=Qt.AlignCenter)
+        self.mainLayout.addWidget(imgLabel)
+        #self.mainLayout.addWidget(nameLabel, alignment=Qt.AlignLeft)
+        self.mainLayout.addWidget(nameLabel)
+
+    # 事件。
+    def mousePressEvent(self, event):
+        # 记录下当前鼠标的位置。
+        self.mousePos = QCursor.pos()
+
+    def mouseReleaseEvent(self, event):
+        # 先进行判断，防止误点将鼠标移开后还是会判断为已经点击的尴尬。
+        if QCursor.pos() != self.mousePos:
+            return
+        else:
+            self.clicked.emit(self.data)
 
 

@@ -1,1 +1,3 @@
 from widgets.content.recommendMusic import RecommendMusic
+from widgets.content.recommendMusicDetail import RecommendMusicDetailNetEase
+from widgets.content.searchMusic import SearchMusic

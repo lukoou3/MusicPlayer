@@ -1,7 +1,38 @@
-from PyQt5.QtWidgets import QApplication,QHBoxLayout,QFrame,QLabel,QPushButton,QLineEdit
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtCore import Qt,pyqtSlot
+from PyQt5.QtWidgets import QApplication,QHBoxLayout,QFrame,QLabel,QPushButton,QLineEdit,QSizePolicy,QSpacerItem
+from PyQt5.QtGui import QPixmap,QCursor
+from PyQt5.QtCore import Qt,pyqtSlot,pyqtSignal
 from PyQt5 import QtCore
+
+
+class SearchLineEdit(QLineEdit):
+    searchSignal =  pyqtSignal(str)
+    """创建一个可搜索的输入框。"""
+    def __init__(self, parent=None):
+        super().__init__()
+        self.parent = parent
+        self.setMinimumSize(218, 20)
+
+        self.button = QPushButton(self)
+        self.button.setMaximumSize(16, 16)
+        self.button.setCursor(QCursor(Qt.PointingHandCursor))
+        self.button.setStyleSheet("QPushButton{border-image: url(icons/search.png)}")
+
+        self.setTextMargins(3, 0, 19, 0)
+
+        self.spaceItem = QSpacerItem(150, 10, QSizePolicy.Expanding)
+
+        self.mainLayout = QHBoxLayout()
+        self.mainLayout.addSpacerItem(self.spaceItem)
+        # self.mainLayout.addStretch(1)
+        self.mainLayout.addWidget(self.button)
+        self.mainLayout.addSpacing(5)
+        self.mainLayout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.mainLayout)
+
+        self.button.clicked.connect(self.sendSearchSignal)
+
+    def sendSearchSignal(self):
+        self.searchSignal.emit(self.text())
 
 class Header(QFrame):
     def __init__(self, parent=None):
@@ -40,11 +71,10 @@ class Header(QFrame):
         self.mainLayout.addWidget(self.nextButton)
 
 
-        self.lineEdit = QLineEdit()
-        self.lineEdit.setObjectName("lineEdit")
-        self.mainLayout.addWidget(self.lineEdit)
+        self.searchLineEdit = SearchLineEdit()
+        self.searchLineEdit.setObjectName("searchLineEdit")
+        self.mainLayout.addWidget(self.searchLineEdit)
         self.mainLayout.addStretch(1)
-
 
         self.minButton = QPushButton('_')
         self.minButton.setObjectName("minButton")

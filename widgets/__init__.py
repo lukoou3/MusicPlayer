@@ -1,1 +1,1 @@
-from widgets.base import ScrollArea
+from widgets.base import ScrollArea,PicLabel

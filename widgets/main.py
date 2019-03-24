@@ -3,10 +3,10 @@
 # an asyncio eventloop for PyQt.
 from quamash import QEventLoop
 import asyncio
-from PyQt5.QtWidgets import QApplication,QHBoxLayout,QVBoxLayout,QFrame,QLabel,QPushButton,QLineEdit
+from PyQt5.QtWidgets import QApplication,QTabWidget,QHBoxLayout,QVBoxLayout,QFrame,QLabel,QPushButton,QLineEdit
 from PyQt5.QtCore import Qt
 from widgets.plat import Header,Navigation,Player
-from widgets.content import RecommendMusic
+from widgets.content import RecommendMusic,RecommendMusicDetailNetEase,SearchMusic
 import sip
 import aiohttp
 from service import addToLoop
@@ -27,49 +27,80 @@ class Main(QFrame):
         # self.mainLayout.setSpacing(0)
 
         self.header = Header(self)
-        self.mainLayout.addWidget(self.header, 40)
+        self.mainLayout.addWidget(self.header, 20)
 
         self.contentLayout = QHBoxLayout()
+        self.contentLayout.setContentsMargins(0,0,0,0)
+        self.contentLayout.setSpacing(0)
         self.navigation = Navigation(self)
         self.contentLayout.addWidget(self.navigation)
-        self.content = RecommendMusic(self)
-        self.contentLayout.addWidget(self.content)
+        self.contents = QTabWidget()
+        self.contents.setContentsMargins(0,0,0,0)
+        self.contents.tabBar().hide()
+        self.recommendMusic = RecommendMusic(self)
+        self.musicDetailNetEase = RecommendMusicDetailNetEase(self)
+        self.searchMusic = SearchMusic(self)
+        self.contents.addTab(self.recommendMusic, "")
+        self.contents.addTab(self.musicDetailNetEase, "")
+        self.contents.addTab(self.searchMusic, "")
+        self.content = self.recommendMusic
+        self.contents.setCurrentWidget(self.content)
+        self.contentLayout.addWidget(self.contents)
         self.mainLayout.addLayout(self.contentLayout, 400)
 
         self.player = Player(self)
-        self.mainLayout.addWidget(self.player, 50)
+        self.mainLayout.addWidget(self.player, 20)
+
 
         self.registerSignalConnect()
 
     def registerSignalConnect(self):
+        # 注册最小化事件
+        self.header.minButton.clicked.connect(self.showMinimized)
+        # 注册最大化事件
+        self.header.maxButton.clicked.connect(self.showMaxiOrRevert)
         #注册关闭事件
         self.header.closeButton.clicked.connect(self.close)
         # 注册导航栏事件
         self.navigation.recommendList.currentRowChanged.connect(self.navigationRecommendChanged)
         self.navigation.recommendList.itemPressed.connect(self.navigationRecommendItemClick)
-
         self.navigation.myMusicList.currentRowChanged.connect(self.navigationmyMusicChanged)
+
+        self.header.searchLineEdit.searchSignal.connect(self.showSearchMusic)
+
+    def showMaxiOrRevert(self):
+        if self.isMaximized():
+            self.showNormal()
+        else:
+            self.showMaximized()
 
     def navigationRecommendChanged(self,index):
         #print(index)
         self.navigation.myMusicList.setCurrentRow(-1)
 
-        content =  RecommendMusic(self)
-        self.changeContentWidget(content)
+        self.changeContentWidget(self.recommendMusic)
 
     def navigationRecommendItemClick(self,widgetItem):
         pass
-        #print(self.navigation.recommendList.currentRow())
+        print(self.navigation.recommendList.currentRow())
         #print(widgetItem)
 
     def navigationmyMusicChanged(self,index):
         self.navigation.recommendList.setCurrentRow(-1)
 
     def changeContentWidget(self,content):
-        self.contentLayout.replaceWidget(self.content, content)
-        sip.delete(self.content)
-        del self.content
+        #self.contentLayout.replaceWidget(self.content, content)
+        #sip.delete(self.content)
+        #del self.content
         self.content = content
+        self.contents.setCurrentWidget(self.content)
+
+    def showSearchMusic(self,text):
+        text = text.strip()
+        if text:
+            self.changeContentWidget(self.searchMusic)
+            self.searchMusic.search(text)
+            #self.changeContentWidget(self.searchMusic)
 
 """
 @addToLoop
