@@ -16,20 +16,38 @@ class SearchMusicNetEaseService(SearchMusicService):
         url = 'http://music.163.com/weapi/cloudsearch/get/web'
         data = {'s': text,'offset': str(offset),'limit': str(limit),'type': str(stype)}
         data = encrypted_request(data)
-        async with self.session.post(url,data=data,headers=headers,timeout=3) as response:
-            if response.status == 200:
-                text =  await response.text()
-                #import asyncio
-                #await asyncio.sleep(5)
-                rst = json.loads(text)
-                if rst["code"] != 200:
-                    print(rst)
+        try:
+            async with self.session.post(url,data=data,headers=headers,timeout=3) as response:
+                if response.status == 200:
+                    text =  await response.text()
+                    #import asyncio
+                    #await asyncio.sleep(5)
+                    rst = json.loads(text)
+                    if rst["code"] != 200:
+                        print(rst)
+                        return []
+                else:
                     return []
-            else:
-                return []
+        except:
+            return []
         musicList = [
             {"id": item["id"], "name": item["name"], "author": "，".join(artist["name"] for artist in item["ar"]),
              "duration": item["dt"], "lyric": item.get("lyric"),
              "picUrl": item.get("al", {}).get("picUrl")}
             for item in rst["result"]["songs"]]
         return musicList
+
+    async def getMusicUrlInfo(self,ids: list):
+        data = {'csrf_token': '', 'ids': ids, 'br': 999000}
+        url = "http://music.163.com/weapi/song/enhance/player/url"
+        data = encrypted_request(data)
+        async with self.session.post(url,data=data,headers=headers,timeout=3) as response:
+            if response.status == 200:
+                text =  await response.text()
+                rst = json.loads(text)
+                if rst["code"] == 200:
+                    return rst.get("data")
+                else:
+                    print(rst)
+            else:
+                return []

@@ -39,3 +39,25 @@ async def close_session():
     if session["session"]:
         await session["session"].close()
         #print("session close")
+
+if __name__ == '__main__':
+    async def test():
+        length = 0
+        async with aiohttp.ClientSession() as session:
+            async with session.get("http://m10.music.126.net/20190324223917/0991994d69a07d9539b09e3563bf336d/ymusic/2f43/79c5/bd3c/7fe89e927098b086e99223a996189cba.mp3"
+                                   ,headers=headers) as response:
+                content = response.content
+                print(response.content_length)
+                print(response.content_type)
+                while True:
+                    chunk = await content.read(1024)
+                    length = length + len(chunk)
+                    if not chunk:
+                        break
+        print(length)
+
+
+
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(test())
+    loop.close()

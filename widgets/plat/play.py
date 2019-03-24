@@ -109,9 +109,9 @@ class Player(QFrame):
         self.timeSlider.sliderPressed.connect(self.timeSliderPressed)
         self.timeSlider.sliderMoved.connect(self.timeSliderMoved)
 
-    def playMusic(self,url):
-        print(url)
-        content = QMediaContent(QUrl.fromLocalFile(url))
+    def playMusic(self,qurl):
+        print(qurl)
+        content = QMediaContent(qurl)
         self.playlist.addMedia(content)
         self.playlist.setCurrentIndex(self.playlist.mediaCount()-1)
         if self.player.state() != QMediaPlayer.PlayingState:

@@ -1,7 +1,9 @@
 from widgets import ScrollArea,PicLabel
-from PyQt5.QtWidgets import QApplication,QVBoxLayout,QHeaderView,QAbstractItemView,QHBoxLayout,QPushButton,QTabWidget,QLabel,QTextEdit,QTableWidget,QTableWidgetItem
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import QUrl
+from PyQt5.QtWidgets import (QApplication,QVBoxLayout,QHeaderView,QAbstractItemView,QHBoxLayout,
+                             QPushButton,QTabWidget,QLabel,QTextEdit,QTableWidget,QTableWidgetItem,
+                             QProgressBar,QMenu,QAction)
+from PyQt5.QtGui import QIcon,QCursor
+from PyQt5.QtCore import QUrl,Qt
 from PyQt5.QtMultimedia import QMediaContent,QMediaPlayer
 from service import addToLoop,RecommendMusicDetailNetEaseService
 
@@ -100,19 +102,40 @@ class RecommendMusicDetailBase(ScrollArea):
 
         self.singsTable.itemDoubleClicked.connect(self.musicItemDoubleClick)
 
+        self.singsTable.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.singsTable.customContextMenuRequested.connect(self.singsTableContextMenu)
+
     def musicItemDoubleClick(self,item):
         #print(item)
         currentRow = self.singsTable.currentRow()
+
+        """
         player = self.parent.player
         import os
         import random
         names = [name for name in os.listdir(r"F:\musicdowmload") if ".MP3" in name]
         url = r"F:\musicdowmload\{}".format(random.choice(names))
-        player.playMusic(url)
-        #self.palyMusic(self.musicList[currentRow])
+        player.playMusic(QUrl.fromLocalFile(url))
+        """
+
+        self.palyMusic(self.musicList[currentRow])
+
+    def singsTableContextMenu(self,pos):
+        currentRow = self.singsTable.currentRow()
+
+        pmenu = QMenu(self)
+        downloadAct = QAction("下载", pmenu)
+        pmenu.addAction(downloadAct)
+        downloadAct.triggered.connect(lambda :self.downloadMusic(currentRow))
+        #pmenu.popup(self.singsTable.mapToGlobal(pos))
+        pmenu.popup(QCursor.pos())
+
+    async def downloadMusic(self,currentRow):
+        pass
 
     async def palyMusic(self,data):
         pass
+
 
 class RecommendMusicDetailNetEase(RecommendMusicDetailBase):
     def __init__(self, parent=None):
@@ -154,11 +177,18 @@ class RecommendMusicDetailNetEase(RecommendMusicDetailBase):
             url = musicList[0]["url"]
         else:
             url = "http://music.163.com/song/media/outer/url?id={}.mp3".format(data["id"])
-        print(url)
-        content = QMediaContent(QUrl(url))
-        play = QMediaPlayer()
-        play.setMedia(content)
-        play.play()
+        player = self.parent.player
+        player.playMusic(QUrl(url))
+
+    @addToLoop
+    async def downloadMusic(self,currentRow):
+        data = self.musicList[currentRow]
+        progressBar = QProgressBar()
+        self.singsTable.setCellWidget(currentRow, 3, progressBar)
+        await self.seivice.downloadMusic("http://music.163.com/song/media/outer/url?id={}.mp3".format(data["id"]),
+                                          progressBar)
+
+
 
 
 

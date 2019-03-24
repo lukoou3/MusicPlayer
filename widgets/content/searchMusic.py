@@ -1,5 +1,6 @@
 from widgets import ScrollArea
 from PyQt5.QtWidgets import QVBoxLayout,QAbstractItemView,QTableWidget,QHeaderView,QTableWidgetItem,QTabWidget,QLabel
+from PyQt5.QtCore import QUrl
 from service import addToLoop,SearchMusicNetEaseService
 
 class SearchMusicTab(ScrollArea):
@@ -46,15 +47,12 @@ class SearchMusicTab(ScrollArea):
         pass
 
     def musicItemDoubleClick(self,item):
-        #print(item)
+        # print(item)
         currentRow = self.singsTable.currentRow()
-        player = self.parent.player
-        import os
-        import random
-        names = [name for name in os.listdir(r"F:\musicdowmload") if ".MP3" in name]
-        url = r"F:\musicdowmload\{}".format(random.choice(names))
-        player.playMusic(url)
-        #self.palyMusic(self.musicList[currentRow])
+        self.palyMusic(self.musicList[currentRow])
+
+    async def palyMusic(self,data):
+        pass
 
 class SearchMusic(ScrollArea):
     def __init__(self, parent=None):
@@ -113,7 +111,15 @@ class SearchMusicNetEase(SearchMusicTab):
             item = QTableWidgetItem(transSeconds(data["duration"] / 1000))
             self.singsTable.setItem(i, 3, item)
 
-
+    @addToLoop
+    async def palyMusic(self, data):
+        musicList = await self.seivice.getMusicUrlInfo([data["id"]])
+        if musicList:
+            url = musicList[0]["url"]
+        else:
+            url = "http://music.163.com/song/media/outer/url?id={}.mp3".format(data["id"])
+        player = self.parent.player
+        player.playMusic(QUrl(url))
 
 def transSeconds(seconds):
     m, s = divmod(seconds, 60)

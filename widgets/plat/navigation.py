@@ -37,6 +37,7 @@ class Navigation(ScrollArea):
 
         self.myMusicList = QListWidget()
         self.myMusicList.setObjectName("myMusicList")
+        self.myMusicList.addItem(QListWidgetItem(QIcon('icons/music.jpg'), " 正在下载"))
         self.myMusicList.addItem(QListWidgetItem(QIcon('icons/music.jpg'), " 本地音乐"))
         self.myMusicList.addItem(QListWidgetItem(QIcon('icons/music.jpg'), " 我的下载"))
         self.mainLayout.addWidget(self.myMusicList)

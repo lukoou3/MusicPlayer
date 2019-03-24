@@ -27,7 +27,7 @@ class RecommendMusicDetailNetEaseService(QObject):
         data = {'csrf_token': '', 'ids': ids, 'br': 999000}
         url = "http://music.163.com/weapi/song/enhance/player/url"
         data = encrypted_request(data)
-        async with self.session.post(url,data=data,timeout=3) as response:
+        async with self.session.post(url,data=data,headers=headers,timeout=3) as response:
             if response.status == 200:
                 text =  await response.text()
                 rst = json.loads(text)
@@ -37,6 +37,20 @@ class RecommendMusicDetailNetEaseService(QObject):
                     print(rst)
             else:
                 return []
+
+    async def downloadMusic(self,url,progressBar):
+        length = 0
+        async with self.session.get(url,headers=headers) as response:
+            content = response.content
+            progressBar.setMaximum(response.content_length)
+            print(response.content_length)
+            print(response.content_type)
+            while True:
+                chunk = await content.read(1024*100)
+                length = length + len(chunk)
+                progressBar.setValue(length)
+                if not chunk:
+                    break
 
 if __name__ == '__main__':
     import requests
