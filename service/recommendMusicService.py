@@ -46,7 +46,7 @@ class RecommendMusicNetEaseService(RecommendMusicService):
 class RecommendMusicQQService(RecommendMusicService):
     def __init__(self):
         super().__init__()
-        self.session = session["session"]
+        self.session = session["session_qq"]
         self.headers = headers.copy()
         self.headers.update({"Host": "c.y.qq.com","Referer": "https://y.qq.com/portal/playlist.html"})
 

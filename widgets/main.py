@@ -6,7 +6,7 @@ import asyncio
 from PyQt5.QtWidgets import QApplication,QTabWidget,QHBoxLayout,QVBoxLayout,QFrame,QLabel,QPushButton,QLineEdit
 from PyQt5.QtCore import Qt
 from widgets.plat import Header,Navigation,Player
-from widgets.content import RecommendMusic,RecommendMusicDetailNetEase,SearchMusic
+from widgets.content import RecommendMusic,RecommendMusicDetailNetEase,RecommendMusicDetailQQ,SearchMusic
 import sip
 import aiohttp
 from service import addToLoop
@@ -39,9 +39,11 @@ class Main(QFrame):
         self.contents.tabBar().hide()
         self.recommendMusic = RecommendMusic(self)
         self.musicDetailNetEase = RecommendMusicDetailNetEase(self)
+        self.musicDetailQQ = RecommendMusicDetailQQ(self)
         self.searchMusic = SearchMusic(self)
         self.contents.addTab(self.recommendMusic, "")
         self.contents.addTab(self.musicDetailNetEase, "")
+        self.contents.addTab(self.musicDetailQQ, "")
         self.contents.addTab(self.searchMusic, "")
         self.content = self.recommendMusic
         self.contents.setCurrentWidget(self.content)

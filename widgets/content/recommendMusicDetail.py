@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (QApplication,QVBoxLayout,QHeaderView,QAbstractItemV
 from PyQt5.QtGui import QIcon,QCursor
 from PyQt5.QtCore import QUrl,Qt
 from PyQt5.QtMultimedia import QMediaContent,QMediaPlayer
-from service import addToLoop,RecommendMusicDetailNetEaseService
+from service import addToLoop,RecommendMusicDetailNetEaseService,RecommendMusicDetailQQService
 
 class RecommendMusicDetailBase(ScrollArea):
     def __init__(self, parent=None):
@@ -189,7 +189,16 @@ class RecommendMusicDetailNetEase(RecommendMusicDetailBase):
                                           progressBar)
 
 
+class RecommendMusicDetailQQ(RecommendMusicDetailBase):
+    def __init__(self, parent=None):
+        """歌单歌曲"""
+        super().__init__(parent)
+        self.seivice = RecommendMusicDetailQQService()
 
+    @addToLoop
+
+    async def updateInfo(self,data):
+        await self.seivice.getDetailMusicList(data)
 
 
 

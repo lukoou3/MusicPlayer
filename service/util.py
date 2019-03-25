@@ -33,11 +33,14 @@ session = {"session":None}#
 async def open_session():
     global session
     session["session"] = aiohttp.ClientSession()
+    session["session_qq"] = aiohttp.ClientSession()
 
 @addToLoop
 async def close_session():
     if session["session"]:
         await session["session"].close()
+    if session["session_qq"]:
+        await session["session_qq"].close()
         #print("session close")
 
 if __name__ == '__main__':

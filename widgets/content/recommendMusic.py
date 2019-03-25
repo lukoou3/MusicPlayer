@@ -126,6 +126,7 @@ class RecommendMusicQQ(RecommendMusicTabBase):
             length = 0
             do_list = list()
             for data in playlists:
+                data['id'] = data['dissid']
                 data["name"] = data["dissname"]
                 picName = makeMd5(data["imgurl"])
                 data["imgUrl"] = 'cache/imgs/{}'.format(picName)
@@ -152,7 +153,9 @@ class RecommendMusicQQ(RecommendMusicTabBase):
                         self.mainLayout.addWidget(imgLabel, row, column, Qt.AlignCenter)
 
     def openMusicDetail(self, data):
-        pass
+        musicDetailQQ = self.parent.musicDetailQQ
+        musicDetailQQ.updateInfo(data)
+        self.parent.changeContentWidget(musicDetailQQ)
 
 class OneSingSeriesLabel(QFrame):
     clicked = pyqtSignal(dict)
