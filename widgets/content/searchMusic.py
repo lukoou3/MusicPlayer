@@ -1,13 +1,14 @@
 from widgets import ScrollArea
 from PyQt5.QtWidgets import QVBoxLayout,QAbstractItemView,QTableWidget,QHeaderView,QTableWidgetItem,QTabWidget,QLabel
 from PyQt5.QtCore import QUrl
-from service import addToLoop,SearchMusicNetEaseService
+from service import addToLoop,SearchMusicNetEaseService,SearchMusicQQService
 
 class SearchMusicTab(ScrollArea):
     def __init__(self, parent=None):
         super().__init__()
         self.parent = parent
         self.setObjectName("SearchMusicTab")
+        self.searchText = ""
         self.musicList = []
 
         self.frame.setContentsMargins(0,0,0,0)
@@ -43,8 +44,22 @@ class SearchMusicTab(ScrollArea):
 
         self.singsTable.itemDoubleClicked.connect(self.musicItemDoubleClick)
 
-    def search(self, text):
-        pass
+    @addToLoop
+    async def search(self, text):
+        self.singsTable.clearContents()
+        self.musicList = await self.seivice.search(text)
+        self.singsTable.setRowCount(len(self.musicList))
+        for i, data in enumerate(self.musicList):
+            item = QTableWidgetItem(str(i + 1))
+            self.singsTable.setItem(i, 0, item)
+            item = QTableWidgetItem(data["name"])
+            self.singsTable.setItem(i, 1, item)
+            item = QTableWidgetItem(data["author"])
+            self.singsTable.setItem(i, 2, item)
+            item = QTableWidgetItem(transSeconds(data["duration"] / 1000))
+            self.singsTable.setItem(i, 3, item)
+
+        self.searchText = text
 
     def musicItemDoubleClick(self,item):
         # print(item)
@@ -77,9 +92,13 @@ class SearchMusic(ScrollArea):
 
         self.addSearchMusicTabs()
 
+        self.tabWidget.currentChanged.connect(self.tabChanged)
+
     def addSearchMusicTabs(self):
         tab = SearchMusicNetEase(self.parent)
         self.addTab(tab,"网易云")
+        tab = SearchMusicQQ(self.parent)
+        self.addTab(tab, "QQ")
 
     def addTab(self, widget, name=''):
         self.tabWidget.addTab(widget, name)
@@ -90,6 +109,11 @@ class SearchMusic(ScrollArea):
         tab = self.tabWidget.currentWidget()
         tab.search(self.searchText)
 
+    def tabChanged(self,index):
+        if self.searchText:
+            tab = self.tabWidget.currentWidget()
+            if self.searchText != tab.searchText:
+                tab.search(self.searchText)
 
 class SearchMusicNetEase(SearchMusicTab):
     def __init__(self, parent=None):
@@ -97,29 +121,24 @@ class SearchMusicNetEase(SearchMusicTab):
         self.seivice = SearchMusicNetEaseService()
 
     @addToLoop
-    async def search(self, text):
-        self.singsTable.clearContents()
-        self.musicList = await self.seivice.search(text)
-        self.singsTable.setRowCount(len(self.musicList))
-        for i, data in enumerate(self.musicList):
-            item = QTableWidgetItem(str(i + 1))
-            self.singsTable.setItem(i, 0, item)
-            item = QTableWidgetItem(data["name"])
-            self.singsTable.setItem(i, 1, item)
-            item = QTableWidgetItem(data["author"])
-            self.singsTable.setItem(i, 2, item)
-            item = QTableWidgetItem(transSeconds(data["duration"] / 1000))
-            self.singsTable.setItem(i, 3, item)
-
-    @addToLoop
     async def palyMusic(self, data):
-        musicList = await self.seivice.getMusicUrlInfo([data["id"]])
-        if musicList:
-            url = musicList[0]["url"]
-        else:
+        url = await self.seivice.getMusicUrlInfo(data["id"])
+        if not url:
             url = "http://music.163.com/song/media/outer/url?id={}.mp3".format(data["id"])
         player = self.parent.player
         player.playMusic(QUrl(url))
+
+class SearchMusicQQ(SearchMusicTab):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.seivice = SearchMusicQQService()
+
+    @addToLoop
+    async def palyMusic(self, data):
+        url = await self.seivice.getMusicUrlInfo(data["id"])
+        if url:
+            player = self.parent.player
+            player.playMusic(QUrl(url))
 
 def transSeconds(seconds):
     m, s = divmod(seconds, 60)

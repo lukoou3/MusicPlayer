@@ -172,10 +172,8 @@ class RecommendMusicDetailNetEase(RecommendMusicDetailBase):
 
     @addToLoop
     async def palyMusic(self,data):
-        musicList = await self.seivice.getMusicUrlInfo([data["id"]])
-        if musicList:
-            url = musicList[0]["url"]
-        else:
+        url = await self.seivice.getMusicUrlInfo(data["id"])
+        if not url:
             url = "http://music.163.com/song/media/outer/url?id={}.mp3".format(data["id"])
         player = self.parent.player
         player.playMusic(QUrl(url))
@@ -196,11 +194,34 @@ class RecommendMusicDetailQQ(RecommendMusicDetailBase):
         self.seivice = RecommendMusicDetailQQService()
 
     @addToLoop
-
     async def updateInfo(self,data):
-        await self.seivice.getDetailMusicList(data)
+        self.picLabel.setSrc(data["imgUrl"])
+        self.picLabel.setStyleSheet('''QLabel {padding: 10px;}''')
+        self.titleLabel.setText(data["name"])
+        data = await self.seivice.getDetailMusicList(data)
 
+        self.authorLabel.setText(data['creator']['nickname'])
+        self.descriptionText.setText(data["description"])
 
+        self.singsTable.clearContents()
+        self.musicList = data['musicList']
+        self.singsTable.setRowCount(len(self.musicList))
+        for i, data in enumerate(self.musicList):
+            item = QTableWidgetItem(str(i + 1))
+            self.singsTable.setItem(i, 0, item)
+            item = QTableWidgetItem(data["name"])
+            self.singsTable.setItem(i, 1, item)
+            item = QTableWidgetItem(data["author"])
+            self.singsTable.setItem(i, 2, item)
+            item = QTableWidgetItem(transSeconds(data["duration"] / 1000))
+            self.singsTable.setItem(i, 3, item)
+
+    @addToLoop
+    async def palyMusic(self, data):
+        url = await self.seivice.getMusicUrlInfo(data["id"])
+        if  url:
+            player = self.parent.player
+            player.playMusic(QUrl(url))
 
 def transSeconds(seconds):
     m, s = divmod(seconds, 60)

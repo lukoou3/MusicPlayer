@@ -2,4 +2,4 @@ from service.netEaseEncode import encrypted_request
 from service.util import addToLoop,headers,session,makeMd5
 from service.recommendMusicService import RecommendMusicNetEaseService,RecommendMusicQQService
 from service.recommendMusicDetailService import RecommendMusicDetailNetEaseService,RecommendMusicDetailQQService
-from service.searchMusicService import SearchMusicNetEaseService
+from service.searchMusicService import SearchMusicNetEaseService,SearchMusicQQService
